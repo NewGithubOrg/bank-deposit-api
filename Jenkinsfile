@@ -17,7 +17,7 @@ node('docker-cloud') {
 
 if(!env.BRANCH_NAME.startsWith("PR")){
   checkpoint 'Build Complete'
-  stage 'Quality Analysis'
+  stage 'DevTest'
   node('docker-cloud') {
     try {
     unstash 'pom'
@@ -42,7 +42,7 @@ if(!env.BRANCH_NAME.startsWith("PR")){
 }
 
 if(env.BRANCH_NAME=="master"){
-  checkpoint 'Quality Analysis Complete'
+  checkpoint 'DevTest Complete'
   def dockerTag = "${env.BUILD_NUMBER}-${short_commit}"
   stage name: 'Version Release', concurrency: 1
   node('docker-cloud') {
@@ -72,9 +72,16 @@ if(env.BRANCH_NAME=="master"){
   }
   //set checkpoint before deployment
   checkpoint 'Build Complete'
-    stage 'Deploy to Prod'
-    //using global library to deploy to docker cloud: params are (nodeLabel, imageTag, name, innerPort, outerPort, httpRequestAuthId)
-    dockerCloudDeploy('docker-cloud', "kishorebhatia/bank-deposit-api:$dockerTag", 'bank-deposit-api', 8080, 8080, 'beedemo-docker-cloud')
+    stage 'Deploy to QA'
+      //Deploy to docker cloud using api
+      echo "QA Successful"
+
+  input message: "Deploy to PROD?"
+  checkpoint 'Before Production'
+
+    stage 'Deploy to PROD'
+    //Deploy to docker cloud using api
+    echo "PROD deployment completed"
 }
 
 node('docker-cloud') {
